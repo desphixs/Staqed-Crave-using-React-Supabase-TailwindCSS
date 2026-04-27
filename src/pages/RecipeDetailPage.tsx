@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../context/AuthContext";
-import { Heart, Bookmark, Clock, ChevronLeft, Loader2, ChefHat, Share2 } from "lucide-react";
+import { Heart, Bookmark, Clock, ChevronLeft, Loader2, ChefHat, Share2, Edit3 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import type { Recipe } from "../types";
 
@@ -215,6 +215,15 @@ const RecipeDetailPage = () => {
                 <Bookmark size={16} fill={isSaved ? "currentColor" : "none"} />
                 {isSaved ? "Saved to Box" : "Save to Box"}
               </button>
+
+              {user?.id === recipe.user_id && (
+                <Link
+                  to={`/recipe/${id}/edit`}
+                  className="flex items-center justify-center gap-3 py-4 px-8 rounded-2xl bg-zinc-100 text-zinc-900 font-bold uppercase tracking-widest text-[10px] hover:bg-white transition-all active:scale-95"
+                >
+                  <Edit3 size={16} /> Edit
+                </Link>
+              )}
             </div>
 
             {/* Recipe Content Section */}
