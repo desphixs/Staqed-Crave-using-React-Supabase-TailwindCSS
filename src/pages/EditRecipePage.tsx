@@ -2,7 +2,7 @@ import { useState, useEffect } from "react"; // Importing React hooks for state 
 import { useParams, useNavigate } from "react-router-dom"; // Importing hooks for URL parameters and navigation
 import { supabase } from "../lib/supabase"; // Importing our configured Supabase client for database operations
 import { useAuth } from "../context/AuthContext"; // Importing our custom authentication hook to get the logged-in user
-import { ChevronLeft, Loader2, Save } from "lucide-react"; // Importing high-fidelity icons for UI elements
+import { ChevronLeft, Loader2, Save, Trash2 } from "lucide-react"; // Importing core icons including Trash for deletion
 import MDEditor from '@uiw/react-md-editor'; // Importing the Markdown editor component for rich text editing
 
 // Fixed list of categories matching our database schema
@@ -104,6 +104,32 @@ const EditRecipePage = () => {
       setError(err.message || "Failed to update recipe."); // Show error in UI
     } finally {
       setSaving(false); // Turn off the loading state on the button
+    }
+  };
+
+  // Function to handle the deletion of a recipe
+  const handleDelete = async () => {
+    // Safety first: Always confirm before destructive actions
+    const confirmed = window.confirm("Are you absolutely sure? This culinary masterpiece will be lost forever.");
+    
+    if (confirmed) {
+      try {
+        setSaving(true); // Reuse the saving state to disable buttons
+        // Call Supabase to delete the specific record
+        const { error: deleteError } = await supabase
+          .from("recipes")
+          .delete()
+          .eq("id", id);
+
+        if (deleteError) throw deleteError;
+        
+        // On success, take the user back to the main feed
+        navigate("/");
+      } catch (err: any) {
+        console.error("Delete Error:", err);
+        alert("Failed to delete recipe. Please try again.");
+        setSaving(false); // Re-enable buttons if it fails
+      }
     }
   };
 
@@ -219,6 +245,16 @@ const EditRecipePage = () => {
           >
             {/* Show a spinner while saving, otherwise show the Save icon and text */}
             {saving ? <Loader2 className="animate-spin" size={20} /> : <><Save size={18} /> Save Changes</>}
+          </button>
+
+          {/* New Delete Button: Visually distinct to signify a destructive action */}
+          <button 
+            type="button"
+            onClick={handleDelete}
+            disabled={saving}
+            className="w-full bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 py-5 rounded-2xl font-black uppercase tracking-widest text-xs transition-all active:scale-[0.98] flex items-center justify-center gap-3 border border-rose-500/20 mt-4"
+          >
+            <Trash2 size={18} /> Delete Recipe
           </button>
         </form>
       </div>
