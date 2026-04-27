@@ -11,13 +11,13 @@ const CATEGORIES = ["All", "Vegan", "Breakfast", "Lunch", "Dinner", "Dessert", "
 interface FeedPageProps {
   recipes: Recipe[];
   loading: boolean;
-  savedRecipes: Recipe[];
+  savedRecipeIds: Set<string>;
   likedRecipeIds: Set<string>; // New: Set of IDs the user has liked
   onSave: (recipe: Recipe) => void;
   onLike: (recipeId: string) => void; // New: Function to toggle likes
 }
 
-const FeedPage = ({ recipes, loading, savedRecipes, likedRecipeIds, onSave, onLike }: FeedPageProps) => {
+const FeedPage = ({ recipes, loading, savedRecipeIds, likedRecipeIds, onSave, onLike }: FeedPageProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState("All");
   const recipeListRef = useRef<HTMLDivElement>(null);
@@ -92,7 +92,7 @@ const FeedPage = ({ recipes, loading, savedRecipes, likedRecipeIds, onSave, onLi
                 <RecipeCard 
                   key={recipe.id} 
                   recipe={recipe} 
-                  isSaved={savedRecipes.some(r => r.id === recipe.id)}
+                  isSaved={savedRecipeIds.has(recipe.id)}
                   isLiked={likedRecipeIds.has(recipe.id)} // Derive liked status
                   onSave={onSave}
                   onLike={onLike} // Pass handler
