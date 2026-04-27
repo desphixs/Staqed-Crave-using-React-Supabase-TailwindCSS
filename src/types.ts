@@ -1,7 +1,7 @@
 // Export an interface named Recipe so it can be used in other files to define the structure of a recipe object
 export interface Recipe {
-  // A unique number to identify each recipe
-  id: number;
+  // A unique string to identify each recipe (UUID)
+  id: string;
   // A string representing the name or title of the recipe
   title: string;
   // A string representing the name of the chef who created the recipe

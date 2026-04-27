@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Routes, Route } from "react-router-dom";
+import { supabase } from "./lib/supabase";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import LoginPage from "./pages/LoginPage";
@@ -10,8 +11,35 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import type { Recipe } from "./types";
 
 const App = () => {
-  // Global state for saved recipes (to be replaced by Supabase in the next task)
+  // State for the full list of recipes from the database
+  const [recipes, setRecipes] = useState<Recipe[]>([]);
+  // State for tracked saved recipes
   const [savedRecipes, setSavedRecipes] = useState<Recipe[]>([]);
+  // State to track if the data is currently being fetched
+  const [loading, setLoading] = useState(true);
+
+  // Fetch all recipes from Supabase on component mount
+  useEffect(() => {
+    const fetchRecipes = async () => {
+      try {
+        setLoading(true);
+        // Query the 'recipes' table, ordering by the newest first
+        const { data, error } = await supabase
+          .from("recipes")
+          .select("*")
+          .order("created_at", { ascending: false });
+
+        if (error) throw error;
+        if (data) setRecipes(data);
+      } catch (err) {
+        console.error("Error fetching recipes:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRecipes();
+  }, []);
 
   // Handler for Saving/Unsaving recipes
   const handleSave = (recipe: Recipe) => {
@@ -33,7 +61,14 @@ const App = () => {
         {/* Public Routes */}
         <Route 
           path="/" 
-          element={<FeedPage savedRecipes={savedRecipes} onSave={handleSave} />} 
+          element={
+            <FeedPage 
+              recipes={recipes} 
+              loading={loading} 
+              savedRecipes={savedRecipes} 
+              onSave={handleSave} 
+            />
+          } 
         />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />

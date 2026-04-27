@@ -3,18 +3,19 @@ import { ChevronDown } from "lucide-react";
 import SearchBar from "../components/SearchBar";
 import FilterBar from "../components/FilterBar";
 import RecipeCard from "../components/RecipeCard";
-import { RECIPES } from "../data/recipes";
+import RecipeCardSkeleton from "../components/RecipeCardSkeleton";
 import type { Recipe } from "../types";
 
 const CATEGORIES = ["All", "Vegan", "Breakfast", "Lunch", "Dinner", "Dessert", "Healthy"];
 
 interface FeedPageProps {
+  recipes: Recipe[];
+  loading: boolean;
   savedRecipes: Recipe[];
   onSave: (recipe: Recipe) => void;
 }
 
-const FeedPage = ({ savedRecipes, onSave }: FeedPageProps) => {
-  const [recipes] = useState<Recipe[]>(RECIPES);
+const FeedPage = ({ recipes, loading, savedRecipes, onSave }: FeedPageProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState("All");
   const recipeListRef = useRef<HTMLDivElement>(null);
@@ -77,27 +78,30 @@ const FeedPage = ({ savedRecipes, onSave }: FeedPageProps) => {
                 onFilterChange={setActiveFilter} 
               />
               <p className="text-zinc-500 text-sm font-bold uppercase tracking-widest whitespace-nowrap">
-                {filteredRecipes.length} Masterpieces
+                {!loading ? `${filteredRecipes.length} Masterpieces` : 'Searching...'}
               </p>
             </div>
           </div>
 
-          {filteredRecipes.length === 0 && (
-            <div className="text-center py-20 bg-zinc-900/30 rounded-3xl border border-zinc-800 animate-in fade-in zoom-in-95 duration-300">
-              <p className="text-2xl font-bold text-zinc-400 mb-2">No recipes found.</p>
-              <p className="text-zinc-600">Try adjusting your filters or search keywords.</p>
-            </div>
-          )}
-
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
-            {filteredRecipes.map((recipe) => (
-              <RecipeCard 
-                key={recipe.id} 
-                recipe={recipe} 
-                isSaved={savedRecipes.some(r => r.id === recipe.id)}
-                onSave={onSave}
-              />
-            ))}
+            {loading ? (
+              // Show 6 skeletons while loading
+              Array.from({ length: 6 }).map((_, i) => <RecipeCardSkeleton key={i} />)
+            ) : filteredRecipes.length === 0 ? (
+              <div className="col-span-full text-center py-20 bg-zinc-900/30 rounded-3xl border border-zinc-800 animate-in fade-in zoom-in-95 duration-300">
+                 <p className="text-2xl font-bold text-zinc-400 mb-2">No recipes found.</p>
+                 <p className="text-zinc-600">Try adjusting your filters or search keywords.</p>
+              </div>
+            ) : (
+              filteredRecipes.map((recipe) => (
+                <RecipeCard 
+                  key={recipe.id} 
+                  recipe={recipe} 
+                  isSaved={savedRecipes.some(r => r.id === recipe.id)}
+                  onSave={onSave}
+                />
+              ))
+            )}
           </div>
         </main>
       </div>
