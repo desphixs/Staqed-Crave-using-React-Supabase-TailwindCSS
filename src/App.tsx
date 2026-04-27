@@ -7,7 +7,7 @@ import Footer from "./components/Footer";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import FeedPage from "./pages/FeedPage";
-import BoxPage from "./pages/BoxPage";
+import MyBoxPage from "./pages/MyBoxPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import type { Recipe } from "./types";
 
@@ -124,8 +124,14 @@ const App = () => {
     }
   };
 
-  // Derive the full saved recipes array for the BoxPage
-  const savedRecipes = recipes.filter(r => savedRecipeIds.has(r.id));
+  // Helper for MyBoxPage to update global Set when unsaving
+  const syncSave = (recipeId: string, isSaved: boolean) => {
+    setSavedRecipeIds(prev => {
+      const next = new Set(prev);
+      isSaved ? next.add(recipeId) : next.delete(recipeId);
+      return next;
+    });
+  };
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100 font-sans">
@@ -134,7 +140,7 @@ const App = () => {
         <Route path="/" element={<FeedPage recipes={recipes} loading={loading} savedRecipeIds={savedRecipeIds} likedRecipeIds={likedRecipeIds} onSave={handleSave} onLike={handleLike} />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
-        <Route path="/box" element={<ProtectedRoute><BoxPage savedRecipes={savedRecipes} likedRecipeIds={likedRecipeIds} onSave={handleSave} onLike={handleLike} /></ProtectedRoute>} />
+        <Route path="/my-box" element={<ProtectedRoute><MyBoxPage likedRecipeIds={likedRecipeIds} onLike={handleLike} syncSave={syncSave} /></ProtectedRoute>} />
       </Routes>
       <Footer />
     </div>

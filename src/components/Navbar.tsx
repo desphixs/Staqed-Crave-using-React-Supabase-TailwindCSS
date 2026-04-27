@@ -21,7 +21,7 @@ const Navbar = () => {
 
   const navLinks = [
     { name: "Explore", icon: <Search size={14} />, path: "/" },
-    { name: "My Box", icon: <Library size={14} />, path: "/box" },
+    { name: "My Box", icon: <Library size={14} />, path: "/my-box" },
   ];
 
   return (
