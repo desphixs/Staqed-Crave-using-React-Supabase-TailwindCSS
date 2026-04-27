@@ -1,66 +1,79 @@
-// Import the useState hook from React for managing the mobile menu open/close state
 import { useState } from "react";
-// Import icons (Search, Library, Menu, X) from the lucide-react library
-import { Search, Library, Menu, X } from "lucide-react";
-// Import the Dialog component from Headless UI to handle the mobile overlay menu
+import { Search, Library, Menu, X, LogOut, User as UserIcon } from "lucide-react";
 import { Dialog } from "@headlessui/react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import { supabase } from "../lib/supabase";
 
-// Define the properties expected by the Navbar component
-interface NavbarProps {
-  // The ID of the currently active view ('feed' or 'box')
-  currentView: string;
-  // A function to update the view when a navigation link is clicked
-  onViewChange: (view: "feed" | "box") => void;
-}
-
-// Define the Navbar component using an arrow function
-const Navbar = ({ currentView, onViewChange }: NavbarProps) => {
-  // state variable to track if the mobile navigation menu is currently open or closed
+const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { user } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
 
-  // Configuration for navigation links: including names, icons, and corresponding view IDs
+  // Highlight the active link based on the current URL path
+  const isActive = (path: string) => location.pathname === path;
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    navigate("/login");
+  };
+
   const navLinks = [
-    { name: "Explore", icon: <Search size={14} />, id: "feed" },
-    { name: "My Box", icon: <Library size={14} />, id: "box" },
+    { name: "Explore", icon: <Search size={14} />, path: "/" },
+    { name: "My Box", icon: <Library size={14} />, path: "/box" },
   ];
 
-  // Return the JSX for the navigation bar
   return (
-    // Main navigation element, sticky at the top of the viewport with a blurred background effect
     <nav className="sticky top-0 z-50 w-full bg-zinc-950/80 backdrop-blur-md border-b border-zinc-800/50 py-4">
-      {/* Centered container for logo and links with flexbox alignment */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center">
-        {/* Logo container that resets the view to 'feed' when clicked */}
-        <div 
-          onClick={() => onViewChange("feed")}
-          className="text-2xl font-black tracking-tighter text-rose-500 uppercase cursor-pointer"
+        {/* Logo */}
+        <Link 
+          to="/"
+          className="text-2xl font-black tracking-tighter text-rose-500 uppercase flex items-center gap-2"
         >
           Crave<span className="text-zinc-100">.</span>
+        </Link>
+
+        {/* Desktop Links */}
+        <div className="hidden md:flex items-center gap-8">
+          <div className="flex gap-8 text-[11px] font-bold uppercase tracking-widest text-zinc-400">
+            {navLinks.map((link) => (
+              <Link 
+                key={link.path} 
+                to={link.path}
+                className={`flex items-center gap-2 transition-colors ${isActive(link.path) ? "text-rose-500" : "hover:text-rose-500"}`}
+              >
+                {link.icon} {link.name}
+              </Link>
+            ))}
+          </div>
+
+          <div className="h-4 w-[1px] bg-zinc-800" />
+
+          {/* Auth Actions */}
+          <div className="flex items-center gap-4">
+            {user ? (
+              <button 
+                onClick={handleLogout}
+                className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-zinc-400 hover:text-rose-500 transition-colors"
+              >
+                <LogOut size={14} /> Log Out
+              </button>
+            ) : (
+              <div className="flex items-center gap-4 text-[11px] font-bold uppercase tracking-widest">
+                <Link to="/login" className="text-zinc-400 hover:text-rose-500 transition-colors">Sign In</Link>
+                <Link to="/register" className="bg-rose-500 text-white px-4 py-2 rounded-full hover:bg-rose-600 transition-all">Register</Link>
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Navigation links for desktop screens (hidden on mobile) */}
-        <div className="hidden md:flex gap-8 text-[11px] font-bold uppercase tracking-widest text-zinc-400">
-          {/* Loop through navLinks and render a button for each */}
-          {navLinks.map((link) => (
-            <button 
-              key={link.id} 
-              // Calls the onViewChange function with the link's specific ID
-              onClick={() => onViewChange(link.id as "feed" | "box")}
-              // Applies active color (rose) if the link matches currentView, otherwise applies hover styles
-              className={`flex items-center gap-2 transition-colors ${currentView === link.id ? "text-rose-500" : "hover:text-rose-500"}`}
-            >
-              {/* Display the icon and the name for each link */}
-              {link.icon} {link.name}
-            </button>
-          ))}
-        </div>
-
-        {/* Hamburger menu button for mobile devices (hidden on desktop) */}
+        {/* Mobile Menu Toggle */}
         <div className="flex md:hidden">
           <button
             type="button"
             className="text-zinc-400 hover:text-rose-500"
-            // Opens the mobile menu when clicked
             onClick={() => setMobileMenuOpen(true)}
           >
             <Menu size={24} />
@@ -68,16 +81,13 @@ const Navbar = ({ currentView, onViewChange }: NavbarProps) => {
         </div>
       </div>
 
-      {/* Mobile Menu Modal overlay powered by Headless UI Dialog component */}
+      {/* Mobile Menu Modal */}
       <Dialog as="div" className="md:hidden" open={mobileMenuOpen} onClose={setMobileMenuOpen}>
-        {/* Full-screen background for the mobile menu */}
-        <div className="fixed inset-0 z-50 bg-zinc-950 px-6 py-4">
-          {/* Mobile menu header with logo and close button */}
+        <div className="fixed inset-0 z-50 bg-zinc-950 px-6 py-4 overflow-y-auto">
           <div className="flex items-center justify-between">
             <div className="text-2xl font-black tracking-tighter text-rose-500 uppercase">
               Crave<span className="text-zinc-100">.</span>
             </div>
-            {/* Close button for the mobile menu */}
             <button
               type="button"
               className="text-zinc-400"
@@ -86,28 +96,67 @@ const Navbar = ({ currentView, onViewChange }: NavbarProps) => {
               <X size={24} />
             </button>
           </div>
-          {/* Main vertical list of mobile navigation links */}
-          <div className="mt-12 space-y-6">
-            {/* Loop through navLinks for the mobile view */}
-            {navLinks.map((link) => (
-              <button
-                key={link.id}
-                // Styles that change color based on whether the link is currently active
-                className={`w-full flex items-center gap-4 text-2xl font-black uppercase tracking-tighter transition-colors ${currentView === link.id ? "text-rose-500" : "text-zinc-100"}`}
-                onClick={() => {
-                  // Switch view, then close the mobile menu
-                  onViewChange(link.id as "feed" | "box");
-                  setMobileMenuOpen(false);
-                }}
-              >
-                {/* Styled container for the mobile link icon */}
-                <div className={`p-3 rounded-2xl ${currentView === link.id ? "bg-rose-500 text-zinc-100" : "bg-zinc-900 text-rose-500"}`}>
-                  {link.icon}
+          
+          <div className="mt-12 space-y-8">
+            {/* User Profile Info on Mobile */}
+            {user && (
+              <div className="flex items-center gap-4 p-4 bg-zinc-900 rounded-3xl border border-zinc-800">
+                <div className="w-12 h-12 bg-rose-500 rounded-2xl flex items-center justify-center text-white">
+                  <UserIcon size={24} />
                 </div>
-                {/* Text for the mobile link */}
-                {link.name}
-              </button>
-            ))}
+                <div>
+                  <p className="text-zinc-100 font-bold text-sm truncate max-w-[200px]">{user.email}</p>
+                  <p className="text-zinc-500 text-xs font-medium uppercase tracking-widest">Chef Member</p>
+                </div>
+              </div>
+            )}
+
+            <div className="space-y-4">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.path}
+                  to={link.path}
+                  className={`w-full flex items-center gap-4 text-2xl font-black uppercase tracking-tighter transition-colors ${isActive(link.path) ? "text-rose-500" : "text-zinc-100"}`}
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <div className={`p-3 rounded-2xl ${isActive(link.path) ? "bg-rose-500 text-zinc-100" : "bg-zinc-900 text-rose-500"}`}>
+                    {link.icon}
+                  </div>
+                  {link.name}
+                </Link>
+              ))}
+            </div>
+
+            <div className="pt-8 border-t border-zinc-900 space-y-4">
+              {user ? (
+                <button
+                  onClick={() => {
+                    handleLogout();
+                    setMobileMenuOpen(false);
+                  }}
+                  className="w-full flex items-center gap-4 text-zinc-400 text-lg font-bold uppercase tracking-widest"
+                >
+                  <LogOut size={20} /> Log Out
+                </button>
+              ) : (
+                <>
+                  <Link
+                    to="/login"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="block text-zinc-400 text-lg font-bold uppercase tracking-widest"
+                  >
+                    Sign In
+                  </Link>
+                  <Link
+                    to="/register"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="block bg-rose-500 text-white text-center py-4 rounded-2xl font-black uppercase tracking-widest"
+                  >
+                    Create Account
+                  </Link>
+                </>
+              )}
+            </div>
           </div>
         </div>
       </Dialog>
@@ -115,6 +164,4 @@ const Navbar = ({ currentView, onViewChange }: NavbarProps) => {
   );
 };
 
-// Export the Navbar component as the default export
 export default Navbar;
-
