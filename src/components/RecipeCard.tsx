@@ -1,4 +1,5 @@
 import { Heart, Clock, Bookmark } from "lucide-react";
+import { Link } from "react-router-dom";
 import type { Recipe } from "../types";
 
 // Updated properties to accept "Like" status and handler from the parent
@@ -17,7 +18,10 @@ interface RecipeCardProps {
  */
 const RecipeCard = ({ recipe, isSaved, isLiked, onSave, onLike }: RecipeCardProps) => {
   return (
-    <div className="group bg-zinc-900 rounded-3xl overflow-hidden border border-zinc-800 transition-all hover:border-zinc-700 hover:shadow-2xl hover:shadow-rose-500/10">
+    <Link 
+      to={`/recipe/${recipe.id}`}
+      className="group bg-zinc-900 rounded-3xl overflow-hidden border border-zinc-800 transition-all hover:border-zinc-700 hover:shadow-2xl hover:shadow-rose-500/10 block"
+    >
       {/* Top Media Section */}
       <div className="relative h-64 overflow-hidden">
         <img 
@@ -32,7 +36,11 @@ const RecipeCard = ({ recipe, isSaved, isLiked, onSave, onLike }: RecipeCardProp
         <div className="absolute top-4 right-4 flex flex-col gap-2">
           {/* Like Toggle: Now fully driven by global state via props */}
           <button 
-            onClick={() => onLike(recipe.id)}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onLike(recipe.id);
+            }}
             className={`p-2.5 backdrop-blur-md rounded-full border transition-all active:scale-95 duration-300 ${
               isLiked 
                 ? "bg-rose-500/20 text-rose-500 border-rose-500/50" 
@@ -44,7 +52,11 @@ const RecipeCard = ({ recipe, isSaved, isLiked, onSave, onLike }: RecipeCardProp
 
           {/* Save Toggle */}
           <button 
-            onClick={() => onSave(recipe)}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onSave(recipe);
+            }}
             className={`p-2.5 backdrop-blur-md rounded-full border transition-all active:scale-95 duration-300 ${
               isSaved 
                 ? "bg-amber-500/20 text-amber-500 border-amber-500/50" 
@@ -78,7 +90,7 @@ const RecipeCard = ({ recipe, isSaved, isLiked, onSave, onLike }: RecipeCardProp
           </div>
         </div>
       </div>
-    </div>
+    </Link>
   );
 };
 

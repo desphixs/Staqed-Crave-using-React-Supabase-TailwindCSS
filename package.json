@@ -12,6 +12,7 @@
   "dependencies": {
     "@headlessui/react": "^2.2.10",
     "@supabase/supabase-js": "^2.104.1",
+    "@tailwindcss/typography": "^0.5.19",
     "@tailwindcss/vite": "^4.2.4",
     "lucide-react": "^1.11.0",
     "react": "^19.2.5",
