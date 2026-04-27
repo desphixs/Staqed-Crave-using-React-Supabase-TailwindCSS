@@ -11,7 +11,9 @@ export interface Recipe {
   // A string representing the URL path to the recipe's main image
   imageUrl: string;
   // A number representing how many likes the recipe has received
-  likes: number;
+
+  steps?: string;
+  likes_count?: number; // This will now be 
   // A string representing the total time taken to cook the recipe (e.g., "45 mins")
   cookTime: string;
   // A boolean value indicating if the user has saved this recipe for later (true or false)

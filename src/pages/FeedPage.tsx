@@ -12,10 +12,12 @@ interface FeedPageProps {
   recipes: Recipe[];
   loading: boolean;
   savedRecipes: Recipe[];
+  likedRecipeIds: Set<string>; // New: Set of IDs the user has liked
   onSave: (recipe: Recipe) => void;
+  onLike: (recipeId: string) => void; // New: Function to toggle likes
 }
 
-const FeedPage = ({ recipes, loading, savedRecipes, onSave }: FeedPageProps) => {
+const FeedPage = ({ recipes, loading, savedRecipes, likedRecipeIds, onSave, onLike }: FeedPageProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState("All");
   const recipeListRef = useRef<HTMLDivElement>(null);
@@ -34,7 +36,6 @@ const FeedPage = ({ recipes, loading, savedRecipes, onSave }: FeedPageProps) => 
 
   return (
     <>
-      {/* Hero Section */}
       <section className="relative h-[90vh] flex items-center justify-center overflow-hidden">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-rose-500/10 blur-[120px] rounded-full -z-10"></div>
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center flex flex-col items-center justify-center">
@@ -57,7 +58,6 @@ const FeedPage = ({ recipes, loading, savedRecipes, onSave }: FeedPageProps) => 
         </div>
       </section>
 
-      {/* Main Feed Container */}
       <div ref={recipeListRef} className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-24 border-t border-zinc-900">
         <main>
           <div className="flex flex-col gap-10 mb-16">
@@ -72,11 +72,7 @@ const FeedPage = ({ recipes, loading, savedRecipes, onSave }: FeedPageProps) => 
             </div>
 
             <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-              <FilterBar 
-                categories={CATEGORIES} 
-                activeFilter={activeFilter} 
-                onFilterChange={setActiveFilter} 
-              />
+              <FilterBar categories={CATEGORIES} activeFilter={activeFilter} onFilterChange={setActiveFilter} />
               <p className="text-zinc-500 text-sm font-bold uppercase tracking-widest whitespace-nowrap">
                 {!loading ? `${filteredRecipes.length} Masterpieces` : 'Searching...'}
               </p>
@@ -85,7 +81,6 @@ const FeedPage = ({ recipes, loading, savedRecipes, onSave }: FeedPageProps) => 
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
             {loading ? (
-              // Show 6 skeletons while loading
               Array.from({ length: 6 }).map((_, i) => <RecipeCardSkeleton key={i} />)
             ) : filteredRecipes.length === 0 ? (
               <div className="col-span-full text-center py-20 bg-zinc-900/30 rounded-3xl border border-zinc-800 animate-in fade-in zoom-in-95 duration-300">
@@ -98,7 +93,9 @@ const FeedPage = ({ recipes, loading, savedRecipes, onSave }: FeedPageProps) => 
                   key={recipe.id} 
                   recipe={recipe} 
                   isSaved={savedRecipes.some(r => r.id === recipe.id)}
+                  isLiked={likedRecipeIds.has(recipe.id)} // Derive liked status
                   onSave={onSave}
+                  onLike={onLike} // Pass handler
                 />
               ))
             )}

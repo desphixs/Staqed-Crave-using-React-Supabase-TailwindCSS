@@ -5,10 +5,12 @@ import type { Recipe } from "../types";
 
 interface BoxPageProps {
   savedRecipes: Recipe[];
+  likedRecipeIds: Set<string>;
   onSave: (recipe: Recipe) => void;
+  onLike: (recipeId: string) => void;
 }
 
-const BoxPage = ({ savedRecipes, onSave }: BoxPageProps) => {
+const BoxPage = ({ savedRecipes, likedRecipeIds, onSave, onLike }: BoxPageProps) => {
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-24 min-h-[70vh]">
       <header className="mb-16">
@@ -44,7 +46,9 @@ const BoxPage = ({ savedRecipes, onSave }: BoxPageProps) => {
               key={recipe.id} 
               recipe={recipe} 
               isSaved={true}
+              isLiked={likedRecipeIds.has(recipe.id)}
               onSave={onSave}
+              onLike={onLike}
             />
           ))}
         </div>

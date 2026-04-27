@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, useNavigate } from "react-router-dom";
 import { supabase } from "./lib/supabase";
+import { useAuth } from "./context/AuthContext";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import LoginPage from "./pages/LoginPage";
@@ -11,37 +12,92 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import type { Recipe } from "./types";
 
 const App = () => {
-  // State for the full list of recipes from the database
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [recipes, setRecipes] = useState<Recipe[]>([]);
-  // State for tracked saved recipes
   const [savedRecipes, setSavedRecipes] = useState<Recipe[]>([]);
-  // State to track if the data is currently being fetched
+  const [likedRecipeIds, setLikedRecipeIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
 
-  // Fetch all recipes from Supabase on component mount
   useEffect(() => {
-    const fetchRecipes = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
-        // Query the 'recipes' table, ordering by the newest first
+        
+        // --- POWER QUERY: Fetch recipes AND their real like counts in one go ---
+        // We use 'likes(count)' which tells Supabase to look at the likes table 
+        // and just return the total number of rows for each recipe.
         const { data, error } = await supabase
           .from("recipes")
-          .select("*")
+          .select("*, likes(count)") 
           .order("created_at", { ascending: false });
 
         if (error) throw error;
-        if (data) setRecipes(data);
+
+        if (data) {
+          // We transform the data so 'likes_count' is easy to use in our components
+          const formattedRecipes = data.map((r: any) => ({
+            ...r,
+            likes_count: r.likes[0]?.count || 0
+          }));
+          setRecipes(formattedRecipes);
+        }
+
+        if (user) {
+          const { data: likesData } = await supabase
+            .from("likes")
+            .select("recipe_id")
+            .eq("user_id", user.id);
+
+          if (likesData) setLikedRecipeIds(new Set(likesData.map(l => l.recipe_id)));
+        }
       } catch (err) {
-        console.error("Error fetching recipes:", err);
+        console.error("Fetch Error:", err);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchRecipes();
-  }, []);
+    fetchData();
+  }, [user]);
 
-  // Handler for Saving/Unsaving recipes
+  const handleLike = async (recipeId: string) => {
+    if (!user) {
+      navigate("/login");
+      return;
+    }
+
+    const isLiked = likedRecipeIds.has(recipeId);
+    
+    // --- OPTIMISTIC UI UPDATE ---
+    // We still update the UI immediately so it feels fast
+    setLikedRecipeIds(prev => {
+      const next = new Set(prev);
+      isLiked ? next.delete(recipeId) : next.add(recipeId);
+      return next;
+    });
+
+    setRecipes(prev => prev.map(r => 
+      r.id === recipeId 
+        ? { ...r, likes_count: (r.likes_count || 0) + (isLiked ? -1 : 1) }
+        : r
+    ));
+
+    // --- DATABASE PERSISTENCE (Clean & Simple) ---
+    try {
+      if (isLiked) {
+        // Just remove the row. Our query on next refresh will see one less row.
+        await supabase.from("likes").delete().match({ user_id: user.id, recipe_id: recipeId });
+      } else {
+        // Just add the row. Our query on next refresh will see one more row.
+        await supabase.from("likes").insert({ user_id: user.id, recipe_id: recipeId });
+      }
+    } catch (err) {
+      console.error("Error toggling like:", err);
+      // Rollback logic here if needed...
+    }
+  };
+
   const handleSave = (recipe: Recipe) => {
     const isAlreadySaved = savedRecipes.some((r) => r.id === recipe.id);
     if (isAlreadySaved) {
@@ -52,39 +108,14 @@ const App = () => {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100 font-sans selection:bg-rose-500/30">
-      {/* Global Navigation */}
+    <div className="min-h-screen bg-zinc-950 text-zinc-100 font-sans">
       <Navbar />
-      
-      {/* Route Definitions */}
       <Routes>
-        {/* Public Routes */}
-        <Route 
-          path="/" 
-          element={
-            <FeedPage 
-              recipes={recipes} 
-              loading={loading} 
-              savedRecipes={savedRecipes} 
-              onSave={handleSave} 
-            />
-          } 
-        />
+        <Route path="/" element={<FeedPage recipes={recipes} loading={loading} savedRecipes={savedRecipes} likedRecipeIds={likedRecipeIds} onSave={handleSave} onLike={handleLike} />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
-
-        {/* Protected Routes */}
-        <Route 
-          path="/box" 
-          element={
-            <ProtectedRoute>
-              <BoxPage savedRecipes={savedRecipes} onSave={handleSave} />
-            </ProtectedRoute>
-          } 
-        />
+        <Route path="/box" element={<ProtectedRoute><BoxPage savedRecipes={savedRecipes} likedRecipeIds={likedRecipeIds} onSave={handleSave} onLike={handleLike} /></ProtectedRoute>} />
       </Routes>
-
-      {/* Global Footer */}
       <Footer />
     </div>
   );

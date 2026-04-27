@@ -1,54 +1,45 @@
-import { useState } from "react";
 import { Heart, Clock, Bookmark } from "lucide-react";
 import type { Recipe } from "../types";
 
-// Properties for the RecipeCard
+// Updated properties to accept "Like" status and handler from the parent
 interface RecipeCardProps {
   recipe: Recipe;
   isSaved: boolean;
+  isLiked: boolean; // New: Derived from global app state
   onSave: (recipe: Recipe) => void;
+  onLike: (recipeId: string) => void; // New: Triggers the persistent Supabase update
 }
 
 /**
- * The standard card display for a recipe.
- * Now updated to use snake_case properties from the Supabase database.
+ * Premium Recipe Card component.
+ * Local 'liked' state has been removed to ensure the heart icon accurately
+ * reflects the persistent data in our Supabase 'likes' table.
  */
-const RecipeCard = ({ recipe, isSaved, onSave }: RecipeCardProps) => {
-  // Local state for the "Like" button (purely visual for now)
-  const [liked, setLiked] = useState(false);
-
-  // Toggle the like status
-  const handleLike = () => setLiked(!liked);
-
-  // Calculate likes based on base count + local interaction
-  const currentLikes = liked ? recipe.likes_count + 1 : recipe.likes_count;
-
+const RecipeCard = ({ recipe, isSaved, isLiked, onSave, onLike }: RecipeCardProps) => {
   return (
     <div className="group bg-zinc-900 rounded-3xl overflow-hidden border border-zinc-800 transition-all hover:border-zinc-700 hover:shadow-2xl hover:shadow-rose-500/10">
       {/* Top Media Section */}
       <div className="relative h-64 overflow-hidden">
         <img 
-          src={recipe.image_url} // Changed from imageUrl to image_url
+          src={recipe.image_url} 
           alt={recipe.title}
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
         />
-        {/* Floating Category Tag */}
         <div className="absolute top-4 left-4 bg-zinc-950/60 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest text-zinc-100 border border-zinc-700">
           {recipe.category}
         </div>
         
-        {/* Floating Action Buttons */}
         <div className="absolute top-4 right-4 flex flex-col gap-2">
-          {/* Like Toggle */}
+          {/* Like Toggle: Now fully driven by global state via props */}
           <button 
-            onClick={handleLike}
+            onClick={() => onLike(recipe.id)}
             className={`p-2.5 backdrop-blur-md rounded-full border transition-all active:scale-95 duration-300 ${
-              liked 
+              isLiked 
                 ? "bg-rose-500/20 text-rose-500 border-rose-500/50" 
                 : "bg-zinc-950/60 text-zinc-300 border-zinc-700 hover:text-rose-500 hover:bg-rose-500/10"
             }`}
           >
-            <Heart size={18} fill={liked ? "currentColor" : "none"} className={liked ? "animate-pulse" : ""} />
+            <Heart size={18} fill={isLiked ? "currentColor" : "none"} className={isLiked ? "animate-pulse" : ""} />
           </button>
 
           {/* Save Toggle */}
@@ -76,14 +67,14 @@ const RecipeCard = ({ recipe, isSaved, onSave }: RecipeCardProps) => {
           </div>
         </div>
 
-        {/* Footer Meta */}
         <div className="flex items-center gap-4 pt-4 border-t border-zinc-800">
           <div className="flex items-center gap-1.5 text-xs font-bold text-zinc-400 uppercase tracking-tight">
             <Clock size={14} className="text-rose-500" />
-            {recipe.cook_time} {/* Changed from cookTime to cook_time */}
+            {recipe.cook_time}
           </div>
-          <div className={`text-xs font-bold uppercase tracking-tight transition-colors duration-300 ${liked ? 'text-rose-500' : 'text-zinc-400'}`}>
-            {currentLikes} Likes
+          {/* Live Like Count: Now updating in real-time as the database changes */}
+          <div className={`text-xs font-bold uppercase tracking-tight transition-colors duration-300 ${isLiked ? 'text-rose-500' : 'text-zinc-400'}`}>
+            {recipe.likes_count} Likes
           </div>
         </div>
       </div>
