@@ -11,6 +11,7 @@ import MyBoxPage from "./pages/MyBoxPage";
 import RecipeDetailPage from "./pages/RecipeDetailPage";
 import CreateRecipePage from "./pages/CreateRecipePage";
 import EditRecipePage from "./pages/EditRecipePage";
+import DashboardPage from "./pages/DashboardPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import type { Recipe } from "./types";
 
@@ -146,6 +147,7 @@ const App = () => {
         <Route path="/recipe/:id" element={<RecipeDetailPage />} />
         <Route path="/recipe/:id/edit" element={<ProtectedRoute><EditRecipePage /></ProtectedRoute>} />
         <Route path="/create" element={<ProtectedRoute><CreateRecipePage /></ProtectedRoute>} />
+        <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
         <Route path="/my-box" element={<ProtectedRoute><MyBoxPage likedRecipeIds={likedRecipeIds} onLike={handleLike} syncSave={syncSave} /></ProtectedRoute>} />
       </Routes>
       <Footer />
