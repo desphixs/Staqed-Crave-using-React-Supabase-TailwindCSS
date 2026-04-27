@@ -9,6 +9,7 @@ import RegisterPage from "./pages/RegisterPage";
 import FeedPage from "./pages/FeedPage";
 import MyBoxPage from "./pages/MyBoxPage";
 import RecipeDetailPage from "./pages/RecipeDetailPage";
+import CreateRecipePage from "./pages/CreateRecipePage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import type { Recipe } from "./types";
 
@@ -142,6 +143,7 @@ const App = () => {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/recipe/:id" element={<RecipeDetailPage />} />
+        <Route path="/create" element={<ProtectedRoute><CreateRecipePage /></ProtectedRoute>} />
         <Route path="/my-box" element={<ProtectedRoute><MyBoxPage likedRecipeIds={likedRecipeIds} onLike={handleLike} syncSave={syncSave} /></ProtectedRoute>} />
       </Routes>
       <Footer />

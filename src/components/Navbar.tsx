@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search, Library, Menu, X, LogOut, User as UserIcon } from "lucide-react";
+import { Search, Library, Menu, X, LogOut, User as UserIcon, Plus } from "lucide-react";
 import { Dialog } from "@headlessui/react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
@@ -54,12 +54,20 @@ const Navbar = () => {
           {/* Auth Actions */}
           <div className="flex items-center gap-4">
             {user ? (
-              <button 
-                onClick={handleLogout}
-                className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-zinc-400 hover:text-rose-500 transition-colors"
-              >
-                <LogOut size={14} /> Log Out
-              </button>
+              <div className="flex items-center gap-6">
+                <Link 
+                  to="/create"
+                  className="bg-rose-500 text-white px-4 py-2 rounded-full text-[11px] font-bold uppercase tracking-widest hover:bg-rose-600 transition-all active:scale-95 flex items-center gap-2"
+                >
+                  <Plus size={14} /> Create
+                </Link>
+                <button 
+                  onClick={handleLogout}
+                  className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-zinc-400 hover:text-rose-500 transition-colors"
+                >
+                  <LogOut size={14} /> Log Out
+                </button>
+              </div>
             ) : (
               <div className="flex items-center gap-4 text-[11px] font-bold uppercase tracking-widest">
                 <Link to="/login" className="text-zinc-400 hover:text-rose-500 transition-colors">Sign In</Link>
@@ -129,15 +137,24 @@ const Navbar = () => {
 
             <div className="pt-8 border-t border-zinc-900 space-y-4">
               {user ? (
-                <button
-                  onClick={() => {
-                    handleLogout();
-                    setMobileMenuOpen(false);
-                  }}
-                  className="w-full flex items-center gap-4 text-zinc-400 text-lg font-bold uppercase tracking-widest"
-                >
-                  <LogOut size={20} /> Log Out
-                </button>
+                <>
+                  <Link
+                    to="/create"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="w-full flex items-center gap-4 text-rose-500 text-lg font-bold uppercase tracking-widest"
+                  >
+                    <Plus size={20} /> Create Recipe
+                  </Link>
+                  <button
+                    onClick={() => {
+                      handleLogout();
+                      setMobileMenuOpen(false);
+                    }}
+                    className="w-full flex items-center gap-4 text-zinc-400 text-lg font-bold uppercase tracking-widest pt-4"
+                  >
+                    <LogOut size={20} /> Log Out
+                  </button>
+                </>
               ) : (
                 <>
                   <Link
